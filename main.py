@@ -14,6 +14,7 @@ def main():
         cell_size_y=50,
         win=win
     )
+    maze.solve()
 
     win.wait_for_close()
 

@@ -25,6 +25,7 @@ class Maze():
         self.__cell_size_y = cell_size_y
         self.__win = win
         self.__cells = []
+        self.__built = False
         self.directions = {"up" : (0,-1), "down" : (0,1), "left" : (-1,0), "right" : (1,0)}
         if seed is not None:
             random.seed(seed)
@@ -39,6 +40,8 @@ class Maze():
                 self.__draw_cell(col, row)
         self.__break_entrance_and_exit()
         self.__break_walls_r(0,0)
+        self.__reset_cells_visited()
+        self.__built = True
 
     
 
@@ -62,7 +65,10 @@ class Maze():
         if self.__win is  None:
             return
         self.__win.redraw()
-        time.sleep(0.05)
+        if self.__built:
+            time.sleep(0.1)
+        else:
+            time.sleep(0.05)
 
 
     def __break_entrance_and_exit(self):
@@ -72,7 +78,7 @@ class Maze():
         self.__draw_cell(self.__num_cols-1, self.__num_rows-1)
 
     def __break_walls_r(self,col,row):
-        print(f"breaking walls {col}, {row}")
+        #print(f"breaking walls {col}, {row}")
         self.__cells[col][row].visited = True
         while True:
             to_visit = []
@@ -80,13 +86,13 @@ class Maze():
                 nbr_col = col + dir_value[0]
                 nbr_row = row + dir_value[1]
                 #print(f"checking neigbour at {dir_name}, {nbr_col}, {nbr_row}")
-                if nbr_col >= 0 and nbr_col<self.__num_cols and nbr_row >= 0 and nbr_row < self.__num_rows:
+                if self.__cell_inbounds(nbr_col,nbr_row):
                     #print("in bounds")
                     if not self.__cells[nbr_col][nbr_row].visited:
                         to_visit.append((dir_name,(nbr_col, nbr_row)))
             if len(to_visit) == 0:
                 self.__draw_cell(col,row)
-                print("dead_end")
+                #print("dead_end")
                 return
             idx = random.randint(0, len(to_visit)-1)
             
@@ -103,10 +109,50 @@ class Maze():
             elif dir_name == "right":
                 self.__cells[col][row].has_right_wall = False
                 self.__cells[nbr_col][nbr_row].has_left_wall = False
-            print(dir_name)
+            #print(dir_name)
             self.__draw_cell(col, row)
             self.__draw_cell(nbr_col, nbr_row)
             self.__break_walls_r(nbr_col,nbr_row)
+
+    def __reset_cells_visited(self):
+        for col in range(self.__num_cols):
+            for row in range(self.__num_rows):
+                self.__cells[col][row].visited = False
+                self.__draw_cell(col, row)
+
+    def solve(self):
+        return self.__solve_r(0,0)
+    
+    def __solve_r(self, col, row):
+        print(f"solving {col}, {row}")
+        self.__animate()
+        self.__cells[col][row].visited = True
+        if col == self.__num_cols-1 and row == self.__num_rows -1:
+            return True
+        for dir_name, dir in self.directions.items():
+            has_wall = False
+            if dir_name == "up" and self.__cells[col][row].has_top_wall:
+                has_wall = True
+            elif dir_name == "down" and self.__cells[col][row].has_bottom_wall:
+                has_wall = True
+            elif dir_name == "left" and self.__cells[col][row].has_left_wall:
+                has_wall = True
+            elif dir_name == "right" and self.__cells[col][row].has_right_wall:
+                has_wall = True
+            if not has_wall and self.__cell_inbounds(col + dir[0], row + dir[1]) and not self.__cells[col + dir[0]][row + dir[1]].visited:
+                print(f"trying {dir_name}")
+                self.__cells[col][row].draw_move(self.__cells[col + dir[0]][ row + dir[1]])
+                if self.__solve_r(col + dir[0], row + dir[1]):
+                    return True
+                self.__cells[col][row].draw_move(self.__cells[col + dir[0]][ row + dir[1]], True)
+        return False
+                
+
+    def __cell_inbounds(self,col,row):
+        return col >= 0 and col<self.__num_cols and row >= 0 and row < self.__num_rows
+            
+
+
 
             
 

@@ -16,6 +16,8 @@ class Cell():
         self.__win = window
 
     def draw(self, point1, point2):
+        if self.__win is None:
+            return
         self.__x1 = point1.x
         self.__y1 = point1.y
         self.__x2 = point2.x
@@ -46,6 +48,8 @@ class Cell():
             )
 
     def draw_move(self, to_cell, undo=False):
+        if self.__win is None:
+            return
         color = "red"
         if undo:
             color = "grey"
