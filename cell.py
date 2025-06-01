@@ -12,6 +12,7 @@ class Cell():
         self.__x2 = -1
         self.__y1 = -1
         self.__y2 = -1
+        self.visited = False
         self.__win = window
 
     def draw(self, point1, point2):
